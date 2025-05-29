@@ -52,8 +52,6 @@ export const getUser = async (userId: string) => {
   return (await dbGetUser(userId)).Item!;
 };
 
-
-
 export const capturePokemon = async (userId: string, pokemonId: string) => {
   const pokemonData = await getPokemon(pokemonId);
 
