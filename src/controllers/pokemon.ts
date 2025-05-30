@@ -14,6 +14,7 @@ const POKEMON_TYPES = ["pikachu", "jigglypuff", "piplup", "eevee", "lickitung"];
 const MINIMUM_NEARBY_POKEMON = 6;
 const ACTIVATE_RADIUS = metersToDegrees(10); // Proximity to pokemon in which launchpad will trigger fight or flee page
 const POKEMON_RADIUS = metersToDegrees(50); // Generate monsters within 50 meter radius.
+const ACTIVATE_RAD_WITH_MARGIN = ACTIVATE_RADIUS * 1.5;
 
 export const getPokemon = async (pokemonId: string) => {
   const params = {
@@ -65,10 +66,9 @@ export const deletePokemon = async (pokemonId: string) => {
 
 const addPokemon = async (latitude: number, longitude: number) => {
   // 1.5 multipler to activation radius to prevent pokemon from spawning right at activation boundary
-  const marginActivationRadius = ACTIVATE_RADIUS * 1.5;
   const randRadius =
-    marginActivationRadius +
-    Math.random() * (POKEMON_RADIUS - marginActivationRadius);
+    ACTIVATE_RAD_WITH_MARGIN +
+    Math.random() * (POKEMON_RADIUS - ACTIVATE_RAD_WITH_MARGIN);
   const randAngle = Math.random() * 2 * Math.PI;
 
   const xOffset = randRadius * Math.cos(randAngle);
@@ -122,6 +122,16 @@ const addNearbyPokemon = async (latitude: number, longitude: number) => {
   }
 };
 
+interface NearestPokemonWithDist {
+  dist: number;
+  pokemon: any;
+};
+
+interface NearestPokemonReturn {
+  shouldActivate: boolean;
+  pokemon: any;
+}
+
 export const getNearestPokemon = async (
   latitude: number,
   longitude: number,
@@ -134,7 +144,8 @@ export const getNearestPokemon = async (
   await addNearbyPokemon(latitude, longitude);
 
   const allPokemon = await scanPokemon();
-  let nearestPokemon = [];
+  let activatablePokemonToDelete: NearestPokemonWithDist[] = [];
+  let nearestPokemonWithDist: NearestPokemonWithDist | null = null;
 
   for (const pokemon of allPokemon) {
     const pLatitude = pokemon.location.latitude;
@@ -144,16 +155,42 @@ export const getNearestPokemon = async (
     const diff_y = Math.abs(pLongitude - longitude);
     const dist = Math.sqrt(Math.pow(diff_x, 2) + Math.pow(diff_y, 2));
 
-    if (dist < ACTIVATE_RADIUS) {
-      nearestPokemon.push(pokemon);
+    const newPokemonWithDist = {
+      dist,
+      pokemon
+    };
+
+    if (!nearestPokemonWithDist || dist < nearestPokemonWithDist.dist) {
+      nearestPokemonWithDist = newPokemonWithDist;
+
+      if (dist < ACTIVATE_RAD_WITH_MARGIN) {
+        activatablePokemonToDelete.push(nearestPokemonWithDist);
+      }
     }
+
+    activatablePokemonToDelete = activatablePokemonToDelete.filter(activatablePokemon => {
+      if (nearestPokemonWithDist && nearestPokemonWithDist.pokemon.id == activatablePokemon.pokemon.id) {
+        return false;
+      } else {
+        return true;
+      }
+    });
   }
 
   try {
     await Promise.all(
-      nearestPokemon.slice(1).map((pokemon) => deletePokemon(pokemon.id)),
+      activatablePokemonToDelete.map((activatablePokemon) => deletePokemon(activatablePokemon.pokemon.id)),
     );
-    return nearestPokemon[0];
+    let returnPokemon: NearestPokemonReturn | null = null;
+
+    if (nearestPokemonWithDist) {
+      returnPokemon = {
+        shouldActivate: nearestPokemonWithDist.dist < ACTIVATE_RADIUS,
+        pokemon: nearestPokemonWithDist.pokemon
+      };
+    }
+
+    return returnPokemon;
   } catch (error) {
     throw new Error("Failure: get nearest pokemon");
   }
