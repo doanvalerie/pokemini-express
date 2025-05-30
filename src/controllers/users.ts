@@ -37,14 +37,25 @@ const dbGetUser = async (userId: string) => {
   }
 };
 
+const getUserFormat = (userData: any) => {
+  let output = '';
+  output += userData.id.toString() + '\n'
+  for (const pokemon of userData.pokemonCollection) {
+    output += pokemon.id + '\n';
+    output += pokemon.type + '\n';
+  }
+
+  return output;
+}
+
 export const getUser = async (userId: string) => {
   try {
     const user = await dbGetUser(userId);
     if (user.Item) {
-      return user.Item;
+      return getUserFormat(user.Item);
     }
     await createUser(userId);
-    return (await dbGetUser(userId)).Item!;
+    return getUserFormat((await dbGetUser(userId)).Item!);
   } catch (error) {
     throw new Error("Failure: GET user");
   }

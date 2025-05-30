@@ -12,6 +12,7 @@ interface PokemonNearbyQuery {
 router.delete("/:id", async (req, res) => {
   try {
     const payload = await deletePokemon(req.params.id);
+    // Payload is empty, so nothing returned
     res.send(payload);
   } catch (error) {
     res.status(400).send({ error });
@@ -26,6 +27,7 @@ router.get(
 
     try {
       const payload = await getNearestPokemon(latitude, longitude);
+      // Payload is newline-separated
       res.send(payload);
     } catch (error) {
       res.status(400).send({ error });

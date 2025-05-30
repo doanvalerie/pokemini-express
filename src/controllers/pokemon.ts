@@ -132,6 +132,16 @@ interface NearestPokemonReturn {
   pokemon: any;
 }
 
+const formatGetNearestPokemon = (nearData: any) => {
+  let output = '';
+  output += nearData.shouldActivate.toString() + '\n';
+  output += nearData.pokemon.id + '\n';
+  output += nearData.pokemon.type + '\n';
+  output += nearData.pokemon.location.latitude + '\n';
+  output += nearData.pokemon.location.longitude + '\n';
+  return output;
+}
+
 export const getNearestPokemon = async (
   latitude: number,
   longitude: number,
@@ -190,7 +200,11 @@ export const getNearestPokemon = async (
       };
     }
 
-    return returnPokemon;
+    if (returnPokemon) {
+      return formatGetNearestPokemon(returnPokemon);
+    } else {
+      return returnPokemon;
+    }
   } catch (error) {
     throw new Error("Failure: get nearest pokemon");
   }
