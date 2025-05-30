@@ -20,7 +20,7 @@ router.delete("/:id", async (req, res) => {
 
 router.get(
   "/nearby",
-  async (req: express.Request<{}, {}, {}, PokemonNearbyQuery>, res) => {
+  async (req: express.Request<{}, any, {}, PokemonNearbyQuery>, res) => {
     const latitude = parseFloat(req.query.latitude);
     const longitude = parseFloat(req.query.longitude);
 
