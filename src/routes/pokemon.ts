@@ -10,8 +10,12 @@ interface PokemonNearbyQuery {
 }
 
 router.delete("/:id", async (req, res) => {
-  const payload = await deletePokemon(req.params.id);
-  res.send(payload);
+  try {
+    const payload = await deletePokemon(req.params.id);
+    res.send(payload);
+  } catch (error) {
+    res.status(400).send({ error });
+  }
 });
 
 router.get(
@@ -20,9 +24,12 @@ router.get(
     const latitude = parseFloat(req.query.latitude);
     const longitude = parseFloat(req.query.longitude);
 
-    const payload = await getNearestPokemon(latitude, longitude);
-    console.log(payload);
-    res.send(payload);
+    try {
+      const payload = await getNearestPokemon(latitude, longitude);
+      res.send(payload);
+    } catch (error) {
+      res.status(400).send({ error });
+    }
   },
 );
 

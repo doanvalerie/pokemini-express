@@ -3,6 +3,7 @@ import express from "express";
 import { PutCommand, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 
 import { deletePokemon, getPokemon } from "./pokemon.ts";
+
 import docClient from "../config/aws.ts";
 
 const createUser = async (userId: string) => {
@@ -42,29 +43,34 @@ const dbGetUser = async (userId: string) => {
 };
 
 export const getUser = async (userId: string) => {
-  const user = await dbGetUser(userId);
-
-  if (user.Item) {
-    return user.Item;
+  try {
+    const user = await dbGetUser(userId);
+    if (user.Item) {
+      return user.Item;
+    }
+    await createUser(userId);
+    return (await dbGetUser(userId)).Item!;
+  } catch (error) {
+    throw new Error("Failure: GET user");
   }
-
-  await createUser(userId);
-  return (await dbGetUser(userId)).Item!;
 };
 
 export const capturePokemon = async (userId: string, pokemonId: string) => {
-  const pokemonData = await getPokemon(pokemonId);
+  try {
+    const pokemonData = await getPokemon(pokemonId);
+    const params = {
+      TableName: process.env.USER_TABLE_NAME,
+      Key: { id: userId },
+      UpdateExpression:
+        "SET pokemonCollection = list_append(pokemonCollection, :item)",
+      ExpressionAttributeValues: {
+        ":item": [{ id: pokemonData.id, type: pokemonData.type }],
+      },
+    };
 
-  const params = {
-    TableName: process.env.USER_TABLE_NAME,
-    Key: { id: userId },
-    UpdateExpression:
-      "SET pokemonCollection = list_append(pokemonCollection, :item)",
-    ExpressionAttributeValues: {
-      ":item": [{ id: pokemonData.id, type: pokemonData.type }],
-    },
-  };
-
-  await docClient.send(new UpdateCommand(params));
-  await deletePokemon(pokemonId);
+    await deletePokemon(pokemonId);
+    await docClient.send(new UpdateCommand(params));
+  } catch (error) {
+    throw new Error("Failure: POST Capture Pokemon");
+  }
 };

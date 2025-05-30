@@ -27,7 +27,7 @@ export const getPokemon = async (pokemonId: string) => {
     const data = await docClient.send(new GetCommand(params));
     return data.Item!;
   } catch (error) {
-    throw new Error("Unable to Get Pokemon");
+    throw new Error("Failure: get pokemon by ID");
   }
 };
 
@@ -36,11 +36,15 @@ export const scanPokemon = async () => {
     TableName: process.env.POKEMON_TABLE_NAME,
   };
 
-  const pokemon = await docClient.send(new ScanCommand(params));
-  if (!pokemon.Items) {
-    return [];
-  } else {
-    return pokemon.Items;
+  try {
+    const pokemon = await docClient.send(new ScanCommand(params));
+    if (!pokemon.Items) {
+      return [];
+    } else {
+      return pokemon.Items;
+    }
+  } catch (error) {
+    throw new Error("Failure: get all pokemon");
   }
 };
 
@@ -52,7 +56,11 @@ export const deletePokemon = async (pokemonId: string) => {
     },
   };
 
-  await docClient.send(new DeleteCommand(params));
+  try {
+    await docClient.send(new DeleteCommand(params));
+  } catch (error) {
+    throw new Error("Failure: delete pokemon by ID");
+  }
 };
 
 const addPokemon = async (latitude: number, longitude: number) => {
@@ -86,11 +94,9 @@ const addPokemon = async (latitude: number, longitude: number) => {
 
   try {
     const data = await docClient.send(new PutCommand(params));
-    console.log("result: " + JSON.stringify(data));
     return data;
   } catch (error) {
-    console.error("Error:", error);
-    throw new Error("Unable to Create User");
+    throw new Error("Failure: add pokemon");
   }
 };
 
@@ -120,13 +126,11 @@ export const getNearestPokemon = async (
   latitude: number,
   longitude: number,
 ) => {
-  console.log("getNearestPokemon", latitude, longitude);
   /*
    * If there is at least one pokemon within activation_radius, then check if there
    * are multiple pokemon within 1.5*activation_radius. If so, then remove the duplicates
    * from the larger radius and only return the single pokemon from within the smaller radius.
    */
-
   await addNearbyPokemon(latitude, longitude);
 
   const allPokemon = await scanPokemon();
@@ -145,8 +149,12 @@ export const getNearestPokemon = async (
     }
   }
 
-  await Promise.all(
-    nearestPokemon.slice(1).map((pokemon) => deletePokemon(pokemon.id)),
-  );
-  return nearestPokemon[0];
+  try {
+    await Promise.all(
+      nearestPokemon.slice(1).map((pokemon) => deletePokemon(pokemon.id)),
+    );
+    return nearestPokemon[0];
+  } catch (error) {
+    throw new Error("Failure: get nearest pokemon");
+  }
 };
