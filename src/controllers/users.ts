@@ -1,5 +1,3 @@
-import express from "express";
-
 import { PutCommand, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 
 import { deletePokemon, getPokemon } from "./pokemon.ts";
@@ -17,10 +15,8 @@ const createUser = async (userId: string) => {
 
   try {
     const data = await docClient.send(new PutCommand(params));
-    console.log("Result: " + JSON.stringify(data));
     return data;
   } catch (error) {
-    console.error("Error:", error);
     throw new Error("Unable to Create User");
   }
 };
@@ -35,7 +31,6 @@ const dbGetUser = async (userId: string) => {
 
   try {
     const data = await docClient.send(new GetCommand(params));
-    console.log("Result : " + JSON.stringify(data));
     return data;
   } catch (error) {
     throw new Error("Unable to DB Get User");
