@@ -23,6 +23,8 @@ app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/pokemon", pokemonRouter);
 
-app.listen(process.env.PORT, () => {
+const server = app.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`);
 });
+
+server.keepAliveTimeout = 60 * 1000 * 10; // timeout is 10 minutes
