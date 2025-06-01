@@ -13,8 +13,8 @@ const metersToDegrees = (meters: number) => meters / 111320;
 const POKEMON_TYPES = ["pikachu", "jigglypuff", "piplup", "eevee", "lickitung"];
 const MINIMUM_NEARBY_POKEMON = 6;
 const ACTIVATE_RADIUS = metersToDegrees(10); // Proximity to pokemon in which launchpad will trigger fight or flee page
-const POKEMON_RADIUS = metersToDegrees(50); // Generate monsters within 50 meter radius.
-const ACTIVATE_RAD_WITH_MARGIN = ACTIVATE_RADIUS * 1.5;
+const POKEMON_RADIUS = metersToDegrees(100); // Generate monsters within 50 meter radius.
+const ACTIVATE_RAD_WITH_MARGIN = ACTIVATE_RADIUS * 3;
 
 export const getPokemon = async (pokemonId: string) => {
   const params = {
